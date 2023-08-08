@@ -11,21 +11,21 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    [SerializeField] Text highScoreText;
+    public Button ranksButton;
     public GameObject GameOverText;
     
-    private bool m_Started = false;
-    private int m_Points;
+    bool m_Started = false;
+    int m_Points;
     
-    private bool m_GameOver = false;
+    bool m_GameOver = false;
 
-    
-    // Start is called before the first frame update
     void Start()
     {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
+
+        int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -36,9 +36,12 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        highScoreText.text = string.Format("Best Score : {0} : {1}",
+            DPManager.Instance.highScores[0].Key, DPManager.Instance.highScores[0].Value);
     }
 
-    private void Update()
+    void Update()
     {
         if (!m_Started)
         {
@@ -62,15 +65,47 @@ public class MainManager : MonoBehaviour
         }
     }
 
+    void UpdateHighScoreUI()
+    {
+        if(m_Points > DPManager.Instance.highScores[0].Value)
+        {
+            highScoreText.text = string.Format("Best Score: {0} : {1}",
+                DPManager.Instance.playerName, m_Points);
+        }
+        
+    }
+
     void AddPoint(int point)
     {
         m_Points += point;
         ScoreText.text = $"Score : {m_Points}";
+        UpdateHighScoreUI();
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        UpdateHighScore();
+    }
+
+    void UpdateHighScore()
+    {
+        if (m_Points > DPManager.Instance.highScores[4].Value)
+        {
+            DPManager.Instance.highScores[4] =
+                new KeyValuePair<string, int>(DPManager.Instance.playerName, m_Points);
+            DPManager.Instance.SortHighScores();
+        }
+    }
+
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene("menu");
+    }
+
+    public void GoRanks()
+    {
+        SceneManager.LoadScene("ranks");
     }
 }
